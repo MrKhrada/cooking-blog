@@ -22,7 +22,7 @@ router.post('/submit-recipe', recipeController.submitRecipeOnPost);
  * @method GET /update-user
  */
 router.get('/recipe/:id/update-recipe', recipeController.updateRecipe);
-// router.put('/recipe/:id/update-recipe', recipeController.updateRecipeOnPut);
+router.put('/recipe/:id', recipeController.updateRecipeOnPut);
 
 
 module.exports = router;

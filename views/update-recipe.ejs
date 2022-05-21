@@ -21,7 +21,7 @@
     
     <div class="col-8">
 
-        <form action="/recipe/<%- recipe._id %>" enctype="multipart/form-data" method="PUT">
+        <form id="update__recipe" action="/recipe/<%- recipe._id %>" enctype="multipart/form-data" method="PUT">
 
             <div class="row g-3">
 
@@ -43,11 +43,13 @@
                 <div class="col-12">
                     <label for="ingredients" class="form-label">Ingredients:</label><br>
                     <small>Example: Sugar</small>
+                    <% recipe.ingredients.forEach(function(ingredient) {%>
                     <div class="ingredientList">
                         <div class="ingredientDiv mb-1">
-                            <input type="text" name="ingredients" class="form-control">
+                            <input value="<%- recipe.ingredients%>" type="text" name="ingredients" class="form-control">
                         </div>
                     </div>
+                    <% }) %>
                 </div>
 
                 <div class="col-12">

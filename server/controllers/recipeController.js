@@ -3,6 +3,7 @@ const req = require('express/lib/request');
 const res = require('express/lib/response');
 const Category = require('../models/Category');
 const Recipe = require('../models/Recipe');
+const axios = require('axios');
 
 
 
@@ -212,73 +213,29 @@ exports.submitRecipeOnPost = async(req, res) => {
   }
  }
 
-// /**
-//  * PUT /update-recipe
-//  * Update Recipe 
-// */
-// exports.updateRecipeOnPutt = async(req, res) => {
-//   try {
+/* Update by recipe id
+*/
 
-//     let imageUploadFile;
-//     let uploadPath;
-//     let newImageName;
+exports.updateRecipeOnPut = (req,res) => {
+  if(!req.body){
+    return res
+      .status(400)
+      .send({message : "Data to update cannot be empty"})
+  }
 
-//     if(!req.files || Object.keys(req.files).length === 0){
-//       console.log('No files where uploaded.');
-//     } else {
-
-//       imageUploadFile = req.files.image;
-//       newImageName = Date.now() + imageUploadFile.name;
-
-//       uploadPath = require('path').resolve('./') + '/public/uploads/' + newImageName;
-
-//       imageUploadFile.mv(uploadPath, function(err){
-//         if(err) return res.status(500).send(err);
-//       })
-
-//     }
-
-//     const updatedRecipe = new Recipe({
-//       name: req.body.name,
-//       email: req.body.email,
-//       description: req.body.description,
-//       ingredients: req.body.ingredients,
-//       category: req.body.category,
-//       image: newImageName,
-//     });
-
-//     await updatedRecipe.save();
-
-//     req.flash('infoSubmit', 'Recipe has been updated.');
-//     res.redirect('/recipe');
-//   } catch (error) {
-//     // res.json(error);
-//     req.flash('infoErrors', error);
-//     res.redirect('/update-recipe');
-//   }
-// }
-
-
-// exports.updateRecipeOnPut = (req,res)=>{
-//   if(!req.body){
-//       return res
-//       .status(400)
-//       .send({ message : "Data to update can not be empty"})
-//   }
-
-//   const id = req.params.id;
-//   Recipe.findByIdAndUpdate(id, req.body, { useFindAndModify:false})
-//       .then(data => {
-//           if(!data){
-//               res.status(404).send({ message : `Cannot update user with ${id}. Maybe user not found!`})
-//           }else{
-//               res.send(data)
-//           }
-//       })
-//       .catch(err =>{
-//           res.status(500).send({ message : "Error update user information"})
-//       })
-// }
+  const id = req.params.id;
+  Recipe.findByIdAndUpdate(id, req.body, {useFindAndModify: false})
+  .then(data => {
+    if (!data){
+      res.status(404).send({message : `Cannot update recipe with ${id}.`})
+    } else {
+      res.send(data)
+    }
+  })
+  .catch(err =>{
+    res.status(500).send({message : "Error updating recipe data."})
+  })
+}
 
 
 
