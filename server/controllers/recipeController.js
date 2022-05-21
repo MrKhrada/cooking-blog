@@ -3,7 +3,8 @@ const req = require('express/lib/request');
 const res = require('express/lib/response');
 const Category = require('../models/Category');
 const Recipe = require('../models/Recipe');
-const axios = require('axios');
+const deleteRecipe = require('../controllers/recipeController');
+const { nextTick } = require('process');
 
 
 
@@ -83,7 +84,7 @@ exports.exploreRecipe = async(req, res) => {
     try {
       let recipeId = req.params.id;
       const recipe = await Recipe.findById(recipeId);
-      res.render('recipe', { title: 'Cooking Blog - Recipe', recipe}  );
+      res.render('recipe', { title: 'Cooking Blog - Recipe', recipe, deleteRecipe}  );
     } catch (error) {
       res.send({message: error.message || "Error Occured"});
     }
@@ -213,222 +214,82 @@ exports.submitRecipeOnPost = async(req, res) => {
   }
  }
 
-/* Update by recipe id
-*/
+/**
+ * Put  /recipe/:id/update-recipe
+ * Update Recipe Form
+ */
 
-exports.updateRecipeOnPut = (req,res) => {
-  if(!req.body){
-    return res
-      .status(400)
-      .send({message : "Data to update cannot be empty"})
-  }
+exports.updateRecipeOnPut = async (req, res, next) => {
+  req.recipe = await Recipe.findById(req.params.id)
+  next()
+}, saveRecipeAndRedirect('updated')
 
-  const id = req.params.id;
-  Recipe.findByIdAndUpdate(id, req.body, {useFindAndModify: false})
-  .then(data => {
-    if (!data){
-      res.status(404).send({message : `Cannot update recipe with ${id}.`})
-    } else {
-      res.send(data)
+function saveRecipeAndRedirect(path) {
+  return async (req, res) => {
+    let recipe = req.recipe
+    recipe.name = req.body.name
+    recipe.email = req.body.email
+    recipe.description = req.body.description
+    recipe.ingredients = req.body.ingredients
+    recipe.category = req.body.category
+    try {
+      recipe = await recipe.save()
+      res.redirect(`recipe/${recipe.id}`)
+    } catch (e) {
+      res.render(`recipe/:id`, { recipe: recipe })
     }
-  })
-  .catch(err =>{
-    res.status(500).send({message : "Error updating recipe data."})
-  })
+  }
+  } 
+/**
+ * Delete /recipe/:id
+ * Delete Recipe
+ */
+
+exports.deleteRecipe = async (req, res) => {
+  try{
+    const removeRecipe = await Recipe.remove({_id: req.params.id });
+    res.json(removeRecipe);
+  } catch (err) {
+    res.json({ message: err });
+  }
 }
 
 
 
 
-// async function updateRecipe(){
 
-//   try {
-//     const res = await Recipe.updateOne({ name: 'El Benji Pa Los Pibes' }, { name: 'El pibe mas fachero: EL BENJI'})
-//     res.n; // Number of documents matched
-//     res.nModifies; // Number of documents modified
-//   } catch (error) {
-//     console.log(error);
+
+
+
+
+
+
+
+
+
+/* Update by recipe id
+// */
+
+// exports.updateRecipeOnPut = (req,res) => {
+//   if(!req.body){
+//     return res
+//       .status(400)
+//       .send({message : "Data to update cannot be empty"})
 //   }
-// }
-// updateRecipe();
-
-
-// exports.updateRecipeOnPut = async (req, res) => {
-//   try {
-
-//     let imageUploadFile;
-//     let uploadPath;
-//     let newImageName;
-
-//     if(!req.files || Object.keys(req.files).length === 0){
-//       console.log('No files where uploaded.');
+//   const id = req.params.id;
+//   Recipe.findByIdAndUpdate(id, req.body, {useFindAndModify: false})
+//   .then(data => {
+//     if (!data){
+//       res.status(404).send({message : `Cannot update recipe with ${id}.`})
 //     } else {
-
-//       imageUploadFile = req.files.image;
-//       newImageName = Date.now() + imageUploadFile.name;
-
-//       uploadPath = require('path').resolve('./') + '/public/uploads/' + newImageName;
-
-//       imageUploadFile.mv(uploadPath, function(err){
-//         if(err) return res.status(500).send(err);
-//       })
-
+//       res.send(data)
 //     }
-
-//     const newName = req.body.name;
-//     const newEmail = req.body.email;
-//     const newDescription = req.body.description;
-//     const newIngredients = req.body.ingredients;
-//     const newCategory = req.body.category;
-//     const newImage = req.body.image;
-
-//     const updatedRecipe = await Recipe.updateMany(
-//       {name: req.params.name} , {name: newName},
-//       {email: req.params.name} , {email: newEmail},
-//       {description: req.params.name} , {description: newDescription},
-//       {ingredients: req.params.name} , {ingredients: newIngredients},
-//       {category: req.params.name} , {category: newCategory},
-//       {image: req.params.name} , {image: newImage},
-//     )
-//     res.n;
-//     res.nModifies;
-//     await updatedRecipe.save()
-//     req.flash('infoSubmit', 'Recipe has been updated.');
-//     res.redirect('/recipe');
-//   } catch (error) {
-//     console.log(error)
-//     req.flash('infoErrors', error);
-//     res.redirect('/update-recipe');
-//   }
+//   })
+//   .catch(err =>{
+//     res.status(500).send({message : "Error updating recipe data."})
+//   })
 // }
 
 
 
 
-
-
-
-// Insert information in the MongoDB from VSCode
-
-// async function insertDymmyCategoryData(){
-//     try {
-//         await Category.insertMany([
-//             {
-//                 "name": "Thai",
-//                 "image": "thai-food.jpg"
-//             },
-//             {
-//                 "name": "American",
-//                 "image": "american-food.jpg",
-//             },
-//             {
-//                 "name": "Chinese",
-//                 "image": "chinese-food.jpg",
-//             },
-//             {
-//                 "name": "Mexican",
-//                 "image": "mexican-food.jpg",
-//             },
-//             {
-//                 "name": "Indian",
-//                 "image": "indian-food.jpg",
-//             },
-//             {
-//                 "name": "Spanish",
-//                 "image": "spanish-food.jpg",
-//             } 
-//         ]
-//         );
-//     } catch (error) {
-//         console.log('err', + error)
-//     }
-// }
-
-// insertDymmyCategoryData();
-
-
-
-
-//async function insertDymmyRecipeData(){
-    //   try {
-    //     await Recipe.insertMany([
-    //         { 
-    //             "name": "Pizza",
-    //             "description": `Recipe Description Goes Here`,
-    //             "email": "recipeemail@raddy.co.uk",
-    //             "ingredients": [
-    //               "1 level teaspoon baking powder",
-    //               "1 level teaspoon cayenne pepper",
-    //               "1 level teaspoon hot smoked paprika",
-    //             ],
-    //             "category": "Thai", 
-    //             "image": "pizza.jpeg"
-    //           },
-    //           { 
-    //             "name": "Tacos",
-    //             "description": `Recipe Description Goes Here`,
-    //             "email": "recipeemail@raddy.co.uk",
-    //             "ingredients": [
-    //               "1 level teaspoon baking powder",
-    //               "1 level teaspoon cayenne pepper",
-    //               "1 level teaspoon hot smoked paprika",
-    //             ],
-    //             "category": "Mexican", 
-    //             "image": "tacos.jpeg"
-    //           },
-    //           { 
-    //             "name": "Hamburger",
-    //             "description": `Recipe Description Goes Here`,
-    //             "email": "recipeemail@raddy.co.uk",
-    //             "ingredients": [
-    //               "1 level teaspoon baking powder",
-    //               "1 level teaspoon cayenne pepper",
-    //               "1 level teaspoon hot smoked paprika",
-    //             ],
-    //             "category": "American", 
-    //             "image": "hamburger.jpeg"
-    //           },
-    //           { 
-    //             "name": "Ice Cream",
-    //             "description": `Recipe Description Goes Here`,
-    //             "email": "recipeemail@raddy.co.uk",
-    //             "ingredients": [
-    //               "1 level teaspoon baking powder",
-    //               "1 level teaspoon cayenne pepper",
-    //               "1 level teaspoon hot smoked paprika",
-    //             ],
-    //             "category": "American", 
-    //             "image": "ice-cream.jpeg"
-    //           },
-    //           { 
-    //             "name": "Fried Chicken",
-    //             "description": `Recipe Description Goes Here`,
-    //             "email": "recipeemail@raddy.co.uk",
-    //             "ingredients": [
-    //               "1 level teaspoon baking powder",
-    //               "1 level teaspoon cayenne pepper",
-    //               "1 level teaspoon hot smoked paprika",
-    //             ],
-    //             "category": "Chinese", 
-    //             "image": "fried-chicken.jpeg"
-    //           },
-    //           { 
-    //             "name": "Spaghetti",
-    //             "description": `Recipe Description Goes Here`,
-    //             "email": "recipeemail@raddy.co.uk",
-    //             "ingredients": [
-    //               "1 level teaspoon baking powder",
-    //               "1 level teaspoon cayenne pepper",
-    //               "1 level teaspoon hot smoked paprika",
-    //             ],
-    //             "category": "Thai", 
-    //             "image": "spaghetti.jpeg"
-    //       },
-    //     ]);
-    //   } catch (error) {
-    //     console.log('err', + error)
-    //   }
-    // }
-    
-    // insertDymmyRecipeData();
-    
